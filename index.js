@@ -5,6 +5,7 @@ const app = express()
 const cors = require('cors')
 const body_parser = require('body-parser')
 const jwt = require('jsonwebtoken')
+const crypto = require("crypto")
 app.use(cors())
 app.options('*', cors())
 app.use(body_parser.json())
@@ -99,7 +100,7 @@ app.get('/', function (req, res) {
 
 // 로그인 ===============================================================================
 const check_user_login_query =
-  'SELECT * FROM student WHERE login_id = ? AND password = ? '
+  'SELECT * FROM student WHERE (login_id = ? AND password = ? AND dropped = false); '
 app.post('/login', function (req, res) {
   var login_id = req.body.login_id
   var password = req.body.password
@@ -132,7 +133,7 @@ app.post('/login', function (req, res) {
 
 
 // 회원 정보 관리 ( 아이디/비번 변경 ) =====================================================
-const find_student_query = 'SELECT * FROM student WHERE student_id = ?'
+const find_student_query = 'SELECT * FROM student WHERE (student_id = ? AND dropped = false)'
 function find_student_and_update (req, res, update_query, params) {
   connection.query(find_student_query, [req.userid], (error, rows) => {
     if (error) {
@@ -212,7 +213,60 @@ app.get('/user/info', authenticateToken, function (req, res) {
 })
 
 
+// ADMIN 초기세팅 =============================================================================
+const add_class_query =
+  "INSERT INTO class (review_is_open, review_week) VALUES (false, 1);"
+app.get('/admin/addclass', authenticateAdminToken, function (req, res) {
+  connection.query(add_class_query, (err, result) => {
+    if (err) {
+      console.log('[/admin/addclass] class db query error')
+      return res.status(500).send('Internal Server Error')
+    } else {
+      return res.status(200).send('Successful update')
+    }
+  })
+})
 
+const find_last_student_id = 
+  "SELECT * FROM student ORDER BY student_id DESC LIMIT 1;"
+function getNewStudentId(res, callback) {
+  connection.query(find_last_student_id, (err, result) =>{
+    if (err) {
+      console.log(err)
+      return res.status(500).send('Internal Server Error')
+    } else {
+      const newStudentId = (result[0].student_id + 1).toString();
+      callback(newStudentId);
+    }
+  })
+}
+
+const add_student_query = 
+  "INSERT INTO student (class_id, name, login_id, password, dropped) VALUES (?, ?, ?, ?, false);"
+app.get('/admin/addstudent', authenticateAdminToken, function (req, res) {
+  var class_id = req.body.class_id
+  var student_name = req.body.student_name
+  if (class_id == null) {
+    return res.status(400).send('class_id is empty');
+  } else if (student_name == null) {
+    return res.status(400).send('student_name is empty');
+  }
+  getNewStudentId(res, (newStudentId) => {
+    var initial_login_id = "madcamp" + newStudentId;
+    var initial_password = crypto.randomBytes(4).toString('hex')
+    connection.query(add_student_query, [class_id, student_name, initial_login_id, initial_password], (err, result) => {
+      if (err) {
+        console.log(err)
+        return res.status(500).send('Internal Server Error')
+      } else {
+        return res.status(200).json({
+          initial_login_id: initial_login_id,
+          initial_password: initial_password
+        })
+      }
+    })
+  })
+})
 
 
 app.listen(8080)
