@@ -23,13 +23,11 @@ app.use((req, res, next) => {
 const loginRouter = require('./router/login');
 const userRouter = require('./router/user')
 const adminSettingRouter = require('./router/adminSetting')
-const connection = require('./DBconnection')
-const tokenManager = require('./tokenManager')
-
+const teamRouter = require('./router/team')
 
 
 app.get('/', function (req, res) {
-  res.send('Hello World 19:08:15')
+  res.send('Hello World 19:11:15')
 })
 
 
@@ -41,3 +39,4 @@ server.listen(PORT, () => {
 app.use("/login", loginRouter)
 app.use("/user", userRouter)
 app.use("/admin/setting", adminSettingRouter)
+app.use("/team", teamRouter)

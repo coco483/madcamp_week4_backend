@@ -14,4 +14,17 @@ const connection = mysql.createConnection({
   database: db_info.database
 })
 connection.connect()
-module.exports = connection
+
+function execQuery(res, query, params, next) {
+  connection.query(query, params, (error, rows)=> {
+    if (error) {
+      console.log(error)
+      return res.status(500).send('Internal Server Error')
+    }
+    else {
+      next(rows)
+    }
+  } )
+}
+
+module.exports = {connection, execQuery}

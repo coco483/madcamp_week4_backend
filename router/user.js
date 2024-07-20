@@ -1,24 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const connection = require('../DBconnection')
 const tokenManager = require('../tokenManager')
+const execQuery = require('../DBconnection').execQuery
 
-const find_student_query = 'SELECT * FROM student WHERE (student_id = ? AND dropped = false)'
+const find_student_query = 'SELECT * FROM student WHERE (student_id = ? AND (dropped = false))'
 function find_student_and_update (req, res, update_query, params) {
-  connection.query(find_student_query, [req.userid], (error, rows) => {
-    if (error) {
-      console.log(error)
-      return res.status(500).send('Internal Server Error')
-    } else if (rows.length == 0) {
+  execQuery(find_student_query, [req.userid], (rows)=>{
+    if (rows.length==0) {
       return res.status(404).send('Student not found')
     } else {
-      connection.query(update_query, params, (error, rows) => {
-        if (error) {
-          console.log(error)
-          return res.status(500).send('Internal Server Error')
-        } else {
-          return res.status(200).send('Successful update')
-        }
+      execQuery(update_query, params, (rows) => {
+        return res.status(201).send('Successful update')
       })
     }
   })
@@ -47,38 +39,26 @@ router.put('/changepassword', tokenManager.authenticateToken, function (req, res
 // 유저 정보 불러오기 =======================================================================
 const find_class_query = 'SELECT * FROM class WHERE class_id = ?'
 const find_teammate_query =
-  'SELECT * FROM TEAM WHERE (week = ? AND (student1_id = ? OR student2_id = ?))'
+  'SELECT * FROM TEAM WHERE (curr_week = ? AND (student1_id = ? OR student2_id = ?))'
 router.get('/info', tokenManager.authenticateToken, function (req, res) {
-  connection.query(find_student_query, [req.userid], (error, student_rows) => {
-    if (error) {
-      console.log('[/user/info] student db query error')
-      return res.status(500).send('Internal Server Error')
-    } else if (student_rows.length == 0) {
-      console.log('[/user/info] Student not found')
+  execQuery(res, find_student_query, [req.userid], (student_rows)=>{
+    if (student_rows.length === 0) {
       return res.status(404).send('Student not found')
-    } else {
-      connection.query(
-        find_class_query,
-        student_rows[0].class_id,
-        (error, class_rows) => {
-          if (error) {
-            console.log('[/user/info] class db query error')
-            return res.status(500).send('Internal Server Error')
-          } else if (class_rows[0].length == 0) {
-            console.log('[/user/info] class not found')
-            return res.status(404).send('Internal Database Error')
-          } else {
-            return res.status(200).json({
-              username: student_rows[0].student_id,
-              login_id: student_rows[0].login_id,
-              class_id: student_rows[0].class_id,
-              week: class_rows[0].review_week,
-              teammate: 'teammate'
-            })
-          }
-        }
-      )
-    }
+    } 
+    execQuery(res, find_class_query, [student_rows[0].class_id], (class_rows) => {
+      if (class_rows[0].length == 0) {
+        return res.status(404).send('Internal Database Error')
+      }
+      // 나중에 teammate 찾아서 바꾸기
+      return res.status(200).json({
+        username: student_rows[0].name,
+        login_id: student_rows[0].login_id,
+        class_id: student_rows[0].class_id,
+        week: class_rows[0].curr_week,
+        teammate: 'teammate'
+      })
+    })
+    
   })
 })
 

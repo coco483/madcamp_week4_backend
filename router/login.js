@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const connection = require('../DBconnection')
+const connection = require('../DBconnection').connection
 const tokenManager = require('../tokenManager')
+const execQuery = require('../DBconnection').execQuery
 
 const check_user_login_query =
   'SELECT * FROM student WHERE (login_id = ? AND password = ? AND dropped = false);'
@@ -23,6 +24,7 @@ router.post('/', (req, res) => {
     }
     var params = [login_id, password]
     console.log(params)
+    
     connection.query(check_user_login_query, params, (error, rows) => {
         if (error) throw error
         else if (rows.length > 1) {

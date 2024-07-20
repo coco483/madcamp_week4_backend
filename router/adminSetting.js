@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const connection = require('../DBconnection')
+const connection = require('../DBconnection').connection
 const tokenManager = require('../tokenManager')
-const crypto = require("crypto")
+const crypto = require("crypto");
+const { execQuery } = require("../DBconnection");
 
 const find_last_class_id = 
   "SELECT * FROM class ORDER BY class_id DESC LIMIT 1;"
@@ -18,8 +19,8 @@ function getNewClassId(res, callback) {
   })
 }
 const add_class_query =
-  "INSERT INTO class (class_id, review_is_open, review_week) VALUES (?, false, 1);"
-router.get('/addclass', tokenManager.authenticateAdminToken, function (req, res) {
+  "INSERT INTO class (class_id, review_is_open, curr_week) VALUES (?, false, 1);"
+router.post('/addclass', tokenManager.authenticateAdminToken, function (req, res) {
   getNewClassId(res, (newClassId) => {
     connection.query(add_class_query, [newClassId], (err, result) => {
       if (err) {
@@ -49,7 +50,7 @@ function getNewStudentId(res, callback) {
 
 const add_student_query = 
   "INSERT INTO student (student_id, class_id, name, login_id, password, dropped) VALUES (?, ?, ?, ?, ?, false);"
-router.get('/addstudent', tokenManager.authenticateAdminToken, function (req, res) {
+router.post('/addstudent', tokenManager.authenticateAdminToken, function (req, res) {
   var class_id = req.body.class_id
   var student_name = req.body.student_name
   if (class_id == null) {
@@ -71,6 +72,15 @@ router.get('/addstudent', tokenManager.authenticateAdminToken, function (req, re
         })
       }
     })
+  })
+})
+
+const get_all_class_query = 
+"SELECT * FROM class;"
+router.get('/classes', tokenManager.authenticateAdminToken, function (req, res) {
+  execQuery(res, get_all_class_query, [], (classRows) => {
+    const class_id_list = classRows.map(row => row.class_id)
+    return res.status(200).json({"class_id_list": class_id_list})
   })
 })
 
