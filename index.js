@@ -52,7 +52,6 @@ function authenticateToken (req, res, next) {
     return res.sendStatus(401).json({ error: 'Token required' })
   jwt.verify(token, process.env.TOKEN_SECRET, (err, parse_result) => {
     if (err) {
-      console.log(err)
       if (err.name === 'TokenExpiredError') {
         console.log('Token is expired')
         return res.status(403).json({ error: 'Token expired' })
@@ -78,7 +77,6 @@ function authenticateAdminToken (req, res, next) {
     return res.sendStatus(401).json({ error: 'Admin Token required' })
   jwt.verify(token, process.env.TOKEN_SECRET_ADMIN, (err, parse_result) => {
     if (err) {
-      console.log(err)
       if (err.name === 'TokenExpiredError') {
         console.log('Token is expired')
         return res.status(403).json({ error: 'Admin Token expired' })
@@ -214,17 +212,33 @@ app.get('/user/info', authenticateToken, function (req, res) {
 
 
 // ADMIN 초기세팅 =============================================================================
-const add_class_query =
-  "INSERT INTO class (review_is_open, review_week) VALUES (false, 1);"
-app.get('/admin/addclass', authenticateAdminToken, function (req, res) {
-  connection.query(add_class_query, (err, result) => {
+const find_last_class_id = 
+  "SELECT * FROM class ORDER BY class_id DESC LIMIT 1;"
+function getNewClassId(res, callback) {
+  connection.query(find_last_class_id, (err, result) =>{
     if (err) {
-      console.log('[/admin/addclass] class db query error')
+      console.log(err)
       return res.status(500).send('Internal Server Error')
     } else {
-      return res.status(200).send('Successful update')
+      const newClassId = (result[0].class_id + 1).toString();
+      callback(newClassId);
     }
   })
+}
+const add_class_query =
+  "INSERT INTO class (class_id, review_is_open, review_week) VALUES (?, false, 1);"
+app.get('/admin/addclass', authenticateAdminToken, function (req, res) {
+  getNewClassId(res, (newClassId) => {
+    connection.query(add_class_query, [newClassId], (err, result) => {
+      if (err) {
+        console.log('[/admin/addclass] class db query error')
+        return res.status(500).send('Internal Server Error')
+      } else {
+        return res.status(200).json({new_class_id: newClassId})
+      }
+    })
+  })
+  
 })
 
 const find_last_student_id = 
@@ -242,7 +256,7 @@ function getNewStudentId(res, callback) {
 }
 
 const add_student_query = 
-  "INSERT INTO student (class_id, name, login_id, password, dropped) VALUES (?, ?, ?, ?, false);"
+  "INSERT INTO student (student_id, class_id, name, login_id, password, dropped) VALUES (?, ?, ?, ?, ?, false);"
 app.get('/admin/addstudent', authenticateAdminToken, function (req, res) {
   var class_id = req.body.class_id
   var student_name = req.body.student_name
@@ -254,7 +268,7 @@ app.get('/admin/addstudent', authenticateAdminToken, function (req, res) {
   getNewStudentId(res, (newStudentId) => {
     var initial_login_id = "madcamp" + newStudentId;
     var initial_password = crypto.randomBytes(4).toString('hex')
-    connection.query(add_student_query, [class_id, student_name, initial_login_id, initial_password], (err, result) => {
+    connection.query(add_student_query, [newStudentId, class_id, student_name, initial_login_id, initial_password], (err, result) => {
       if (err) {
         console.log(err)
         return res.status(500).send('Internal Server Error')
