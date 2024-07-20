@@ -8,6 +8,8 @@ const db_info = {
     database: "db_week4"
 }
 
+console.log(require("crypto").randomBytes(64).toString("hex"))
+
 const connection = mysql.createConnection({
     host: db_info.host,
     port: db_info.port,
