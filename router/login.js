@@ -25,18 +25,14 @@ router.post('/', (req, res) => {
     var params = [login_id, password]
     console.log(params)
     
-    connection.query(check_user_login_query, params, (error, rows) => {
-        if (error) throw error
-        else if (rows.length > 1) {
-        throw rows
-        } else if (rows.length == 1) {
+    execQuery(res, check_user_login_query, params, (rows) => {
+        if (rows.length == 0) {
+            return res.status(404).send('cannot find user information')
+        }
         var token = tokenManager.generateAccessToken(rows[0].student_id)
         return res
             .status(200)
             .json({ username: rows[0].name, token: token, is_admin: false })
-        } else {
-        return res.status(404).send('cannot find user information')
-        }
     })
 })
 
