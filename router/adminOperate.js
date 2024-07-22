@@ -49,15 +49,62 @@ router.put("/startreview", tokenManager.authenticateAdminToken, function (req, r
   })
 })
 
+const get_all_review_query = 
+  ` SELECT * 
+  FROM review r
+  JOIN team t ON t.team_id = r.team_id 
+  WHERE (t.class_id = ? AND t.week = ?) ;`
 function standardize(value, mean, standardDeviation) {
   if (standardDeviation === 0) {
     return 0
   }
   return (value - mean) / standardDeviation;
 }
-
+function calculateMean(scores) {
+  const sum = scores.reduce((a, b) => a + b, 0);
+  return sum / scores.length;
+}
+function calculateStandardDeviation(scores, mean) {
+  const variance = scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / scores.length;
+  return Math.sqrt(variance);
+}
 router.get('/calculate', tokenManager.authenticateAdminToken, function (req, res){
+  const class_id = req.body.class_id
+  const week = req.body.week
+  if (class_id == null) {
+    return res.status(400).send("class_id is empty")
+  } else if (week == null) {
+    return res.status(400).send("week is empty")
+  }
+  execQuery(res, get_all_review_query, [class_id, week], (reviews) => {
+    const studentScores = {};
+    reviews.forEach(review => {
+      if (!studentScores[review.student_id]) {
+        studentScores[review.student_id] = { score1: [], score2: [] };
+      }
+      studentScores[review.student_id].score1.push(review.score1);
+      studentScores[review.student_id].score2.push(review.score2);
+    });
+    const statistics = {};
+    // Calculate mean and standard deviation for each student
+    Object.keys(studentScores).forEach(student_id => {
+      const scores1 = studentScores[student_id].score1;
+      const scores2 = studentScores[student_id].score2;
 
+      const mean1 = calculateMean(scores1);
+      const mean2 = calculateMean(scores2);
+
+      const stdDev1 = calculateStandardDeviation(scores1, mean1);
+      const stdDev2 = calculateStandardDeviation(scores2, mean2);
+
+      statistics[student_id] = {
+        mean_score1: mean1,
+        stdDev_score1: stdDev1,
+        mean_score2: mean2,
+        stdDev_score2: stdDev2,
+      };
+    })
+  })
 })
 
 module.exports = router

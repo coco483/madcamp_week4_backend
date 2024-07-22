@@ -87,8 +87,8 @@ const find_teammate_name_query =
 `
 // 나의 팀메이트 목록 ==============================================================================
 router.get('/teammates', tokenManager.authenticateToken, function (req, res) {
-  console.log('[/teams/teammates]', req.userid, req.body.week)
-  const week = req.body.week
+  const week = req.query.week
+  console.log('[/teams/teammates]', req.userid, week)
   if (week == null) {
     return res.status(400).send('week is missing')
   }
