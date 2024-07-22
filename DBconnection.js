@@ -35,4 +35,4 @@ async function execQuery(res, query, params, next) {
   }
 }
 
-module.exports = {connection, execQuery}
+module.exports = {connection, execQuery, promisePool}

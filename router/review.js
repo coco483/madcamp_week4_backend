@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const promisePool = require('../DBconnection').promisePool
 const tokenManager = require('../tokenManager')
 const { execQuery } = require('../DBconnection')
 
