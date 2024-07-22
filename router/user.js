@@ -5,11 +5,11 @@ const execQuery = require('../DBconnection').execQuery
 
 const find_student_query = 'SELECT * FROM student WHERE (student_id = ? AND (dropped = false))'
 function find_student_and_update (req, res, update_query, params) {
-  execQuery(find_student_query, [req.userid], (rows)=>{
+  execQuery(res, find_student_query, [req.userid], (rows)=>{
     if (rows.length==0) {
       return res.status(404).send('Student not found')
     } else {
-      execQuery(update_query, params, (rows) => {
+      execQuery(res, update_query, params, (rows) => {
         return res.status(201).send('Successful update')
       })
     }
