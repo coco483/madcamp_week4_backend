@@ -24,7 +24,9 @@ const loginRouter = require('./router/login');
 const userRouter = require('./router/user')
 const adminSettingRouter = require('./router/adminSetting')
 const teamRouter = require('./router/team')
-
+const adminOperateRouter = require('./router/adminOperate')
+const reviewRouter = require('./router/review')
+const teamlistRouter = require('./router/teamlist')
 
 app.get('/', function (req, res) {
   res.send('Hello World 19:11:15')
@@ -40,3 +42,6 @@ app.use("/login", loginRouter)
 app.use("/user", userRouter)
 app.use("/admin/setting", adminSettingRouter)
 app.use("/team", teamRouter)
+app.use('/admin/operate', adminOperateRouter)
+app.use('/review', reviewRouter)
+app.use('/teamlist', teamlistRouter)
