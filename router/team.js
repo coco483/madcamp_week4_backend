@@ -83,7 +83,7 @@ const find_teammate_name_query =
 ` SELECT * 
   FROM student s
   JOIN teammember tm ON tm.student_id = s.student_id 
-  WHERE tm.team_id = ?;
+  WHERE (tm.team_id = ? AND tm.student_id != ?) ;
 `
 // 나의 팀메이트 목록 ==============================================================================
 router.get('/teammates', tokenManager.authenticateToken, function (req, res) {
@@ -98,7 +98,7 @@ router.get('/teammates', tokenManager.authenticateToken, function (req, res) {
     } 
     console.log("team name:", my_team[0].code)
     const team_id = my_team[0].team_id
-    execQuery(res, find_teammate_name_query, [team_id], (teammateRows) =>{
+    execQuery(res, find_teammate_name_query, [team_id, req.userid], (teammateRows) =>{
       const teammateNames = teammateRows.map(row => row.name)
       return res.status(200).json({teammates: teammateNames})
     })

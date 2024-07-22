@@ -49,4 +49,15 @@ router.put("/startreview", tokenManager.authenticateAdminToken, function (req, r
   })
 })
 
+function standardize(value, mean, standardDeviation) {
+  if (standardDeviation === 0) {
+    return 0
+  }
+  return (value - mean) / standardDeviation;
+}
+
+router.get('/calculate', tokenManager.authenticateAdminToken, function (req, res){
+
+})
+
 module.exports = router
