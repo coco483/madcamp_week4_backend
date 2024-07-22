@@ -88,7 +88,7 @@ router.get('/classes', tokenManager.authenticateAdminToken, function (req, res) 
 
 const get_all_student_query = 
 "SELECT * FROM student WHERE (class_id =? AND dropped = false);"
-router.get('/studentlist', tokenManager.authenticateAdminToken, function (req, res){
+router.post('/studentlist', tokenManager.authenticateAdminToken, function (req, res){
   console.log("[admin/setting/studentlist]", req.body.class_id)
   if (req.body.class_id == null) {
     return res.status(400).send('class_id is empty');
