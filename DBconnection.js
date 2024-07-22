@@ -6,6 +6,16 @@ const db_info = {
   password: '1234',
   database: 'db_week4'
 }
+const pool = mysql.createPool({
+  host: db_info.host,
+  user: db_info.user,
+  password: db_info.password,
+  database: db_info.database,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+const promisePool = pool.promise();
 const connection = mysql.createConnection({
   host: db_info.host,
   port: db_info.port,
@@ -15,18 +25,14 @@ const connection = mysql.createConnection({
 })
 connection.connect()
 
-function execQuery(res, query, params, next) {
-  connection.connect()
-  connection.query(query, params, (error, rows)=> {
-    if (error) {
-      console.log(error)
-      return res.status(500).send('Internal Server Error')
-    }
-    else {
-      connection.destroy();
-      next(rows)
-    }
-  } )
+async function execQuery(res, query, params, next) {
+  try {
+    const [rows, fields] = await promisePool.query(query, params);
+    next(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
 }
 
 module.exports = {connection, execQuery}

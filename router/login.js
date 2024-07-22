@@ -24,7 +24,6 @@ router.post('/', (req, res) => {
     }
     var params = [login_id, password]
     console.log(params)
-    
     execQuery(res, check_user_login_query, params, (rows) => {
         if (rows.length == 0) {
             return res.status(404).send('cannot find user information')
