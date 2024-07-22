@@ -101,7 +101,7 @@ router.post('/studentlist', tokenManager.authenticateAdminToken, function (req, 
       login_id: row.login_id,
       password: row.password
     }));
-    return res.status(200).json({"students": students});
+    return res.status(200).json({"student_list": students});
   })
 })
 
