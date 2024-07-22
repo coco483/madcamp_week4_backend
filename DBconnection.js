@@ -16,12 +16,14 @@ const connection = mysql.createConnection({
 connection.connect()
 
 function execQuery(res, query, params, next) {
+  connection.connect()
   connection.query(query, params, (error, rows)=> {
     if (error) {
       console.log(error)
       return res.status(500).send('Internal Server Error')
     }
     else {
+      connection.destroy();
       next(rows)
     }
   } )
