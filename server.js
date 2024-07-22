@@ -2,21 +2,25 @@ console.log('Hello worldss')
 
 const express = require('express')
 const http = require("http");
-const app = express()
 const cors = require('cors')
 const body_parser = require('body-parser')
-
-
-app.use(cors())
-app.options('*', cors())
-app.use(body_parser.json())
 const dotenv = require('dotenv')
+
 dotenv.config()
+const app = express()
+app.use(cors({
+  origin: '*', // Replace '*' with your frontend domain if possible
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type, Authorization',
+}));
+app.use(body_parser.json())
+
+
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*') // Restrict to specific domain
   res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS')
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization', 'ngrok-skip-browser-warning')
   next()
 })
 
