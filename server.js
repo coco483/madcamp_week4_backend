@@ -38,7 +38,7 @@ app.get('/', function (req, res) {
 
 
 const server = http.createServer(app)
-const PORT = 8080;
+const PORT = 8000;
 const HOST = '0.0.0.0';
 server.listen(PORT, HOST, () => {
   console.log(`Server running on http://localhost:${PORT}`);
