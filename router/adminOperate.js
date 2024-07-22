@@ -35,20 +35,17 @@ router.put('/setorder', tokenManager.authenticateAdminToken, function (req, res)
 })
 
 const set_review_open_query = 
-  "UPDATE class SET review_is_open = ?, curr_week = ? WHERE (class_id = ?);"
-router.put("/setreview", tokenManager.authenticateAdminToken, function (req, res){
+  "UPDATE class SET review_is_open = true, curr_week = ? WHERE (class_id = ?);"
+router.put("/startreview", tokenManager.authenticateAdminToken, function (req, res){
   const class_id = req.body.class_id
-  const review_is_open = req.body.review_is_open
   const week = req.body.week
   if (class_id == null) {
     return res.status(400).send("class_id is empty")
-  } else if (review_is_open == null) {
-    return res.status(400).send("review_is_open is empty")
   } else if (week == null) {
     return res.status(400).send("week is empty")
   }
-  execQuery(res, set_review_open_query, [review_is_open, week, class_id], (rows) => {
-    return res.status(200).json({"review_is_open":review_is_open})
+  execQuery(res, set_review_open_query, [week, class_id], (rows) => {
+    return res.status(200).send('review is available now')
   })
 })
 
