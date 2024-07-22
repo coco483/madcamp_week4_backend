@@ -36,6 +36,7 @@ function generateAdminAccessToken () {
 function authenticateAdminToken (req, res, next) {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
+    console.log("token:", token)
     if (token == null)
         return res.sendStatus(401).json({ error: 'Admin Token required' })
     jwt.verify(token, process.env.TOKEN_SECRET_ADMIN, (err, parse_result) => {
