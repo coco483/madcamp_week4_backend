@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const promisePool = require('../DBconnection').promisePool
 const tokenManager = require('../tokenManager')
 const { execQuery } = require("../DBconnection");
 
@@ -69,7 +70,7 @@ function calculateStandardDeviation(scores, mean) {
   return Math.sqrt(variance);
 }
 const get_team_members = 
-  `SELECT s.student_name 
+  `SELECT s.name 
   FROM teammember ts 
   JOIN student s ON ts.student_id = s.student_id 
   WHERE ts.team_id = ?`
@@ -129,7 +130,7 @@ router.get('/calculate', tokenManager.authenticateAdminToken, function (req, res
   
       const queries = sortedTeams.map(async (team) => {
         const [rows] = await connection.query(get_team_members, [team.team_id]);
-        team.team_member_list = rows;
+        team.team_member_list = rows.map(obj => obj.name);
         return team;
       });
   
