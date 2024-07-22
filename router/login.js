@@ -8,6 +8,7 @@ const check_user_login_query =
 router.post('/', (req, res) => {
     var login_id = req.body.login_id
     var password = req.body.password
+    console.log('[/login]', login_id, password)
     if (login_id == null) {
         return res.status(400).send('login_id missing in body')
     } else if (password == null) {

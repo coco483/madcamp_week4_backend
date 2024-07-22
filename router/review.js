@@ -9,6 +9,7 @@ const insert_review_query =
   'VALUES (?, ?, ?, ?, ?, ?);'
 router.post('/', tokenManager.authenticateToken, async function (req, res) {
   const reviewList = req.body.review_list
+	console.log("[/review]", reviewList)
   if (!Array.isArray(reviewList) || reviewList.length === 0) {
     return res
       .status(400)

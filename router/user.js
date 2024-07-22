@@ -29,6 +29,7 @@ router.put('/changeid', tokenManager.authenticateToken, function (req, res) {
 const update_password_query =
   'UPDATE student SET password = ? WHERE student_id = ?'
 router.put('/changepassword', tokenManager.authenticateToken, function (req, res) {
+  console.log('[/user/changepassword]', req.body.new_password)
   if (req.body.new_password == null) {
     return res.status(400).send('new_login_id is empty')
   }
@@ -41,13 +42,14 @@ const find_class_query = 'SELECT * FROM class WHERE class_id = ?'
 const find_teammate_query =
   'SELECT * FROM TEAM WHERE (curr_week = ? AND (student1_id = ? OR student2_id = ?))'
 router.get('/info', tokenManager.authenticateToken, function (req, res) {
+  console.log('[/user/info]')
   execQuery(res, find_student_query, [req.userid], (student_rows)=>{
     if (student_rows.length === 0) {
       return res.status(404).send('Student not found')
     } 
     execQuery(res, find_class_query, [student_rows[0].class_id], (class_rows) => {
       if (class_rows[0].length == 0) {
-        return res.status(404).send('Internal Database Error')
+        return res.status(404).send('Class not found')
       }
       // 나중에 teammate 찾아서 바꾸기
       return res.status(200).json({

@@ -21,6 +21,7 @@ function getNewClassId(res, callback) {
 const add_class_query =
   "INSERT INTO class (class_id, review_is_open, curr_week) VALUES (?, false, 1);"
 router.post('/addclass', tokenManager.authenticateAdminToken, function (req, res) {
+  console.log('[/admin/setting/addclass]')
   getNewClassId(res, (newClassId) => {
     connection.query(add_class_query, [newClassId], (err, result) => {
       if (err) {

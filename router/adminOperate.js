@@ -12,6 +12,7 @@ const update_team_order_query
 router.put('/setorder', tokenManager.authenticateAdminToken, function (req, res){
   const week = req.body.week
   const class_id = req.body.class_id
+  console.log('[/admin/operate/setorder]', week, class_id)
   if (class_id == null) {
     return res.status(400).send("class_id is empty")
   } else if (week == null) {
@@ -40,6 +41,7 @@ const set_review_open_query =
 router.put("/startreview", tokenManager.authenticateAdminToken, function (req, res){
   const class_id = req.body.class_id
   const week = req.body.week
+  console.log('[/admin/operate/startreview]', week, class_id)
   if (class_id == null) {
     return res.status(400).send("class_id is empty")
   } else if (week == null) {
@@ -77,6 +79,7 @@ const get_team_members =
 router.get('/calculate', tokenManager.authenticateAdminToken, function (req, res){
   const class_id = req.body.class_id
   const week = req.body.week
+  console.log('[/admin/operate/calculate]', week, class_id)
   if (class_id == null) {
     return res.status(400).send("class_id is empty")
   } else if (week == null) {

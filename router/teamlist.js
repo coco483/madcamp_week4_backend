@@ -13,6 +13,7 @@ const get_all_teams_with_students_query =
 router.get("/", (req, res) => {
   const week = req.body.week
   const class_id = req.body.class_id
+	console.log("[/teamlist]", week, class_id)
   if (class_id == null) {
     return res.status(400).send("class_id is empty")
   } else if (week == null) {
