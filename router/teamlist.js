@@ -10,7 +10,7 @@ const get_all_teams_with_students_query =
   WHERE team.class_id = ? AND week = ?
   ORDER BY team.presentation_order;`;
 
-router.get("/", (req, res) => {
+router.put("/", (req, res) => {
   const week = req.body.week
   const class_id = req.body.class_id
 	console.log("[/teamlist]", week, class_id)
