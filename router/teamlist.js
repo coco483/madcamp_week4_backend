@@ -34,7 +34,7 @@ router.put("/", (req, res) => {
       }
       teamMap[row.team_id].student_name_list.push(row.name);
     });
-    return res.status(200).json(teams);
+    return res.status(200).json({"team_list":teams});
   });
 })
 
