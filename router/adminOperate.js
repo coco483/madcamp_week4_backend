@@ -57,6 +57,10 @@ const get_all_review_query =
   FROM review r
   JOIN team t ON t.team_id = r.team_id 
   WHERE (t.class_id = ? AND t.week = ?) ;`
+const close_review_query =
+  `UPDATE class 
+  SET review_is_open = false, curr_week = ?
+  WHERE class_id = ?; `
 function standardize(value, mean, standardDeviation) {
   if (standardDeviation === 0) {
     return 0
@@ -85,73 +89,75 @@ router.get('/calculate', tokenManager.authenticateAdminToken, function (req, res
   } else if (week == null) {
     return res.status(400).send("week is empty")
   }
-  execQuery(res, get_all_review_query, [class_id, week], async (reviews) => {
-    const studentScores = {};
-    reviews.forEach(review => {
-      if (!studentScores[review.student_id]) {
-        studentScores[review.student_id] = { 1: [], 2: [], 3: [], 4: [] };
-      }
-      studentScores[review.student_id][1].push(review.criteria1);
-      studentScores[review.student_id][2].push(review.criteria2);
-      studentScores[review.student_id][3].push(review.criteria3);
-      studentScores[review.student_id][4].push(review.criteria4);
-    });
-    const aves = {};
-    const stds = {};
-    // Calculate mean and standard deviation for each student
-    Object.keys(studentScores).forEach(student_id => {
-      aves[student_id] = {};
-      stds[student_id] = {};
-      for (let n = 1; n <= 4; n++) {
-        const scores = studentScores[student_id][n];
-        const mean = calculateMean(scores);
-        const stdDev = calculateStandardDeviation(scores, mean);
-        aves[student_id][n] = mean;
-        stds[student_id][n] = stdDev;
-      }
-    });
-    const teamScores = {};
-    reviews.forEach(review => {
-      if (!teamScores[review.team_id]){
-        teamScores[review.team_id] = 0;
-      }
-      const student_id = review.student_id
-      const team_id = review.team_id
-      const criteria = [review.criteria1, review.criteria2, review.criteria3, review.criteria4];
-      const score = criteria.reduce((total, criterion, index) => {
-        return total + standardize(criterion, aves[student_id][index + 1], stds[student_id][index + 1]);
-      }, 0);
-      teamScores[team_id] += score;
-    })
-    let sortedTeams = Object.entries(teamScores)
-      .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
-      .map(([team_id, score]) => ({ team_id, score }));
-    let connection;
-    try {
-      connection = await promisePool.getConnection();
-      await connection.beginTransaction();
-  
-      const queries = sortedTeams.map(async (team) => {
-        const [rows] = await connection.query(get_team_members, [team.team_id]);
-        team.team_member_list = rows.map(obj => obj.name);
-        return team;
+  execQuery(res, close_review_query, [(week+1), class_id], (rows)=>{
+    execQuery(res, get_all_review_query, [class_id, week], async (reviews) => {
+      const studentScores = {};
+      reviews.forEach(review => {
+        if (!studentScores[review.student_id]) {
+          studentScores[review.student_id] = { 1: [], 2: [], 3: [], 4: [] };
+        }
+        studentScores[review.student_id][1].push(review.criteria1);
+        studentScores[review.student_id][2].push(review.criteria2);
+        studentScores[review.student_id][3].push(review.criteria3);
+        studentScores[review.student_id][4].push(review.criteria4);
       });
-  
-      sortedTeams = await Promise.all(queries);
-      await connection.commit();
-  
-      res.status(200).json({ sortedTeams });
-    } catch (err) {
-      if (connection) {
-        await connection.rollback();
+      const aves = {};
+      const stds = {};
+      // Calculate mean and standard deviation for each student
+      Object.keys(studentScores).forEach(student_id => {
+        aves[student_id] = {};
+        stds[student_id] = {};
+        for (let n = 1; n <= 4; n++) {
+          const scores = studentScores[student_id][n];
+          const mean = calculateMean(scores);
+          const stdDev = calculateStandardDeviation(scores, mean);
+          aves[student_id][n] = mean;
+          stds[student_id][n] = stdDev;
+        }
+      });
+      const teamScores = {};
+      reviews.forEach(review => {
+        if (!teamScores[review.team_id]){
+          teamScores[review.team_id] = 0;
+        }
+        const student_id = review.student_id
+        const team_id = review.team_id
+        const criteria = [review.criteria1, review.criteria2, review.criteria3, review.criteria4];
+        const score = criteria.reduce((total, criterion, index) => {
+          return total + standardize(criterion, aves[student_id][index + 1], stds[student_id][index + 1]);
+        }, 0);
+        teamScores[team_id] += score;
+      })
+      let sortedTeams = Object.entries(teamScores)
+        .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+        .map(([team_id, score]) => ({ team_id, score }));
+      let connection;
+      try {
+        connection = await promisePool.getConnection();
+        await connection.beginTransaction();
+    
+        const queries = sortedTeams.map(async (team) => {
+          const [rows] = await connection.query(get_team_members, [team.team_id]);
+          team.team_member_list = rows.map(obj => obj.name);
+          return team;
+        });
+    
+        sortedTeams = await Promise.all(queries);
+        await connection.commit();
+    
+        res.status(200).json({ sortedTeams });
+      } catch (err) {
+        if (connection) {
+          await connection.rollback();
+        }
+        res.status(500).json({ error: "Failed to fetch team members", details: err });
+      } finally {
+        if (connection) {
+          connection.release();
+        }
       }
-      res.status(500).json({ error: "Failed to fetch team members", details: err });
-    } finally {
-      if (connection) {
-        connection.release();
-      }
-    }
-  })
+    })
+  })  
 })
 
 module.exports = router

@@ -16,11 +16,9 @@ router.post('/', tokenManager.authenticateToken, async function (req, res) {
       .json({ error: 'review_list is empty or not an array' })
   }
 	let connection;
-
   try {
     connection = await promisePool.getConnection();
     await connection.beginTransaction();
-
     const queries = reviewList.map(review => {
       return connection.query(insert_review_query, [
         req.userid,
@@ -31,9 +29,7 @@ router.post('/', tokenManager.authenticateToken, async function (req, res) {
         review.criteria4
       ]);
     });
-
     await Promise.all(queries);
-
     await connection.commit();
     res.status(200).json({ message: "All reviews inserted successfully" });
   } catch (err) {
@@ -47,5 +43,23 @@ router.post('/', tokenManager.authenticateToken, async function (req, res) {
     }
   }
 });
+
+const check_review_open_query =
+` SELECT * 
+  FROM class c
+  JOIN student s ON s.class_id = c.class_id 
+  WHERE student_id = ? ;
+`
+router.get('/', tokenManager.authenticateToken, function (req, res){
+	execQuery(res, check_review_open_query, [req.userid], ( row ) => {
+		if (row.length == 0){
+			return res.status(404).send('cannot find student')
+		}
+		const week = row[0].week
+		const class_id = row[0].class_id
+		const review_is_open = row[0].review_is_open
+		res.status(200).json({review_is_open: review_is_open, week:week, class_id:class_id})
+	})
+})
 
 module.exports = router
