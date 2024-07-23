@@ -11,6 +11,7 @@ function generateAccessToken (userid) {
 function authenticateToken (req, res, next) {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
+    console.log("user token:", token)
     if (token == null)
         return res.sendStatus(401).json({ error: 'Token required' })
     jwt.verify(token, process.env.TOKEN_SECRET, (err, parse_result) => {
@@ -36,7 +37,7 @@ function generateAdminAccessToken () {
 function authenticateAdminToken (req, res, next) {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
-    console.log("token:", token)
+    console.log("admin token:", token)
     if (token == null)
         return res.sendStatus(401).json({ error: 'Admin Token required' })
     jwt.verify(token, process.env.TOKEN_SECRET_ADMIN, (err, parse_result) => {
