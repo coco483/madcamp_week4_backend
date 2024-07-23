@@ -80,7 +80,7 @@ const get_team_members =
   FROM teammember ts 
   JOIN student s ON ts.student_id = s.student_id 
   WHERE ts.team_id = ?`
-router.get('/calculate', tokenManager.authenticateAdminToken, function (req, res){
+router.post('/calculate', tokenManager.authenticateAdminToken, function (req, res){
   const class_id = req.body.class_id
   const week = req.body.week
   console.log('[/admin/operate/calculate]', week, class_id)
