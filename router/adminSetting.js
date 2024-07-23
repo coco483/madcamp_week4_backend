@@ -108,7 +108,7 @@ router.post('/studentlist', tokenManager.authenticateAdminToken, function (req, 
 const drop_student_query = 
   "UPDATE student SET dropped = true WHERE (student_id = ?);"
 router.put('/dropstudent', tokenManager.authenticateAdminToken, function (req, res){
-  console.log("[admin/setting/dropstudent]", req.body.student_id)
+  console.log("[admin/setting/dropstudent]", req.body.student_id, req.body)
   if (req.body.student_id == null) {
     return res.status(400).send('class_id is empty');
   }
