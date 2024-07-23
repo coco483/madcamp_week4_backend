@@ -9,7 +9,7 @@ const insert_review_query =
   'VALUES (?, ?, ?, ?, ?, ?);'
 router.post('/', tokenManager.authenticateToken, async function (req, res) {
   const reviewList = req.body.review_list
-	console.log("[/review]", reviewList)
+	console.log("[/review(post)]", reviewList)
   if (!Array.isArray(reviewList) || reviewList.length === 0) {
     return res
       .status(400)
@@ -51,6 +51,7 @@ const check_review_open_query =
   WHERE student_id = ? ;
 `
 router.get('/', tokenManager.authenticateToken, function (req, res){
+  console.log("[/review(get)]", reviewList)
 	execQuery(res, check_review_open_query, [req.userid], ( row ) => {
 		if (row.length == 0){
 			return res.status(404).send('cannot find student')
