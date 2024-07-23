@@ -51,15 +51,15 @@ const check_review_open_query =
   WHERE student_id = ? ;
 `
 router.get('/', tokenManager.authenticateToken, function (req, res){
-  console.log("[/review(get)]", reviewList)
+  console.log("[/review(get)]")
 	execQuery(res, check_review_open_query, [req.userid], ( row ) => {
 		if (row.length == 0){
 			return res.status(404).send('cannot find student')
 		}
-		const week = row[0].week
+		const week = row[0].curr_week
 		const class_id = row[0].class_id
 		const review_is_open = row[0].review_is_open
-    console.log("review get", week, class_id, review_is_open)
+    console.log("review get", week, class_id, review_is_open, row[0])
 		res.status(200).json({review_is_open: review_is_open, week:week, class_id:class_id})
 	})
 })
