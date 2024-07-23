@@ -39,8 +39,18 @@ router.put('/changepassword', tokenManager.authenticateToken, function (req, res
 
 // 유저 정보 불러오기 =======================================================================
 const find_class_query = 'SELECT * FROM class WHERE class_id = ?'
-const find_teammate_query =
-  'SELECT * FROM TEAM WHERE (curr_week = ? AND (student1_id = ? OR student2_id = ?))'
+const find_my_team_query =
+` SELECT * 
+  FROM teammember tm 
+  JOIN team t ON tm.team_id = t.team_id 
+  WHERE tm.student_id = ? AND t.week = ?;
+`
+const find_teammate_name_query = 
+` SELECT * 
+  FROM student s
+  JOIN teammember tm ON tm.student_id = s.student_id 
+  WHERE (tm.team_id = ? AND tm.student_id != ?) ;
+`
 router.get('/info', tokenManager.authenticateToken, function (req, res) {
   console.log('[/user/info]')
   execQuery(res, find_student_query, [req.userid], (student_rows)=>{
@@ -51,14 +61,24 @@ router.get('/info', tokenManager.authenticateToken, function (req, res) {
       if (class_rows[0].length == 0) {
         return res.status(404).send('Class not found')
       }
-      // 나중에 teammate 찾아서 바꾸기
-      return res.status(200).json({
-        username: student_rows[0].name,
-        login_id: student_rows[0].login_id,
-        class_id: student_rows[0].class_id,
-        week: class_rows[0].curr_week,
-        teammate: 'teammate'
+      execQuery(res, find_my_team_query, [req.userid, class_rows[0].curr_week], (my_team) => {
+        if (my_team.length == 0){
+          return res.status(404).send('cannot find team')
+        } 
+        const team_id = my_team[0].team_id
+        execQuery(res, find_teammate_name_query, [team_id, req.userid], (teammateRows) =>{
+          const teammateNames = teammateRows.map(row => row.name)
+          // 나중에 teammate 찾아서 바꾸기
+          return res.status(200).json({
+            username: student_rows[0].name,
+            login_id: student_rows[0].login_id,
+            class_id: student_rows[0].class_id,
+            week: class_rows[0].curr_week,
+            teammate_name_list: teammateNames
+          })
+        })
       })
+      
     })
     
   })
