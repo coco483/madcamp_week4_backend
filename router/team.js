@@ -16,15 +16,15 @@ router.post('/maketeam', tokenManager.authenticateToken, function (req, res) {
   const code = req.body.code
   const teammate_num = req.body.teammate_num
   if ( week == null) {
-    return res.status(400).send('week is missing')
+    return res.status(400).send('주차를 입력해 주세요')
   } else if ( code == null) {
-    return res.status(400).send('code is missing')
+    return res.status(400).send('팀명을 입력해 주세요')
   } else if ( teammate_num == null) {
-    return res.status(400).send('teammate_num is missing')
+    return res.status(400).send('인원수를 입력해 주세요')
   } 
   execQuery(res, find_team_query, [code], (team_using_code) => {
     if (team_using_code.length > 0){
-      return res.status(403).send('someone is using same code')
+      return res.status(403).send('누군가가 같은 팀명을 사용하고 있습니다')
     }
     execQuery(res, find_student_query, [req.userid], (studentRows)=> {
       if (studentRows.length == 0) {
@@ -46,20 +46,20 @@ router.post('/jointeam', tokenManager.authenticateToken, function (req, res) {
   console.log('[/teams/jointeam]', req.userid, req.body.code)
   const code = req.body.code
   if (code == null) {
-    return res.status(400).send('code is missing')
+    return res.status(400).send('코드를 입력해 주세요')
   }
   execQuery(res, find_team_query, [code], (team_using_code) => {
     if (team_using_code.length == 0) {
-      return res.status(404).send('cannot find team')
+      return res.status(404).send('팀을 찾을 수 없습니다')
     } 
     const team_id = team_using_code[0].team_id
     execQuery(res, get_teammates_query, [team_id], (teammateRows)=> {
       if (teammateRows.length >= team_using_code[0].teammate_num) {
-        return res.status(403).send('team is full')
+        return res.status(403).send('팀의 인원이 이미 가득 찼습니다.')
       }
       const userFound = teammateRows.some((key) => {
         if (key.student_id == req.userid) {
-          res.status(403).send('already in the team');
+          res.status(403).send('이미 팀에 참여하셨습니다');
           return true;
         }
         return false;
