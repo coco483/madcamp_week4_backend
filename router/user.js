@@ -66,6 +66,7 @@ router.get('/info', tokenManager.authenticateToken, function (req, res) {
           return res.status(200).json({
             username: student_rows[0].name,
             login_id: student_rows[0].login_id,
+            password: student_rows[0].password,
             class_id: student_rows[0].class_id,
             week: class_rows[0].curr_week,
             teammate_name_list: []
@@ -78,6 +79,7 @@ router.get('/info', tokenManager.authenticateToken, function (req, res) {
           return res.status(200).json({
             username: student_rows[0].name,
             login_id: student_rows[0].login_id,
+            password: student_rows[0].password,
             class_id: student_rows[0].class_id,
             week: class_rows[0].curr_week,
             teammate_name_list: teammateNames
