@@ -94,7 +94,7 @@ router.get('/teammates', tokenManager.authenticateToken, function (req, res) {
   }
   execQuery(res, find_my_team_query, [req.userid, week], (my_team) => {
     if (my_team.length == 0){
-      return res.status(404).send('cannot find team')
+      return res.status(200).json({teammates: []})
     } 
     console.log("team name:", my_team[0].code)
     const team_id = my_team[0].team_id
