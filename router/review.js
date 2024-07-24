@@ -59,7 +59,6 @@ router.get('/', tokenManager.authenticateToken, function (req, res){
 		const week = row[0].curr_week
 		const class_id = row[0].class_id
 		const review_is_open = row[0].review_is_open
-    console.log("review get", week, class_id, review_is_open, row[0])
 		res.status(200).json({review_is_open: review_is_open, week:week, class_id:class_id})
 	})
 })

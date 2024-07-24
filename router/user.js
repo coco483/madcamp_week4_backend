@@ -63,7 +63,13 @@ router.get('/info', tokenManager.authenticateToken, function (req, res) {
       }
       execQuery(res, find_my_team_query, [req.userid, class_rows[0].curr_week], (my_team) => {
         if (my_team.length == 0){
-          return res.status(404).send('cannot find team')
+          return res.status(200).json({
+            username: student_rows[0].name,
+            login_id: student_rows[0].login_id,
+            class_id: student_rows[0].class_id,
+            week: class_rows[0].curr_week,
+            teammate_name_list: []
+          })
         } 
         const team_id = my_team[0].team_id
         execQuery(res, find_teammate_name_query, [team_id, req.userid], (teammateRows) =>{
